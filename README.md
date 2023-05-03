@@ -1,2 +1,3 @@
 # bumblebee
-App that attempts to mimic TTS with bumblebee from Transformers
+
+App that attempts to mimic TTS like bumblebee from Transformers
