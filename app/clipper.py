@@ -21,7 +21,7 @@ def handle(event, context) -> None:
 
     raw_s3 = s3.S3(s3.Namespace.RAW)
     clips_s3 = s3.S3(s3.Namespace.CLIPS)
-    clips_queue = sqs.SQS(config.SQS_URL)
+    clips_queue = sqs.SQS(config.CLIPS_QUEUE_URL)
 
     for raw_object_key in raw_s3.list_object_keys():
         with structlog.contextvars.bound_contextvars(raw_object_s3_path=str(raw_object_key)):

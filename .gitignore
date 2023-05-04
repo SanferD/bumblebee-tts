@@ -1,4 +1,6 @@
 infra/node-modules
 infra/cdk.out
 infra/.npmignore
+infra/**/*.d.ts
+infra/**/*.js
 
