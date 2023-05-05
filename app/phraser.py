@@ -1,8 +1,11 @@
-import s3
-import transcribe_helper
+"""
+Iterates over all clips in event dict and transcribes them using aws transcribe
+"""
 import logger
+import s3
 import structlog
 import time
+import transcribe_helper
 
 
 MAX_ATTEMPTS = 20
