@@ -38,7 +38,7 @@ export class LambdasStack extends cdk.Stack {
         this.phraser = this.createLambdaFunction({ codePath, timeoutDuration, index: "phraser.py", props });
         const clipsQueueEventSource = new lambdaEventSources.SqsEventSource(props.clipsQueue)
         this.phraser.addEventSource(clipsQueueEventSource)
-        this.addPermissionsToPhraser(props.dataBucket)
+        this.addPermissionsToPhraser(props.dataBucket, props.clipsQueue)
   }
 
     private createLambdaFunction({ codePath, timeoutDuration, index, props }: createLambdaFunctionProps) : lambda.Function {
@@ -83,7 +83,7 @@ export class LambdasStack extends cdk.Stack {
         }))
     }
 
-    private addPermissionsToPhraser(dataBucket: s3.Bucket): void {
+    private addPermissionsToPhraser(dataBucket: s3.Bucket, clipsQueue: sqs.Queue): void {
         this.phraser.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:GetObject", "s3:DeleteObject",],
             resources: [`${dataBucket.bucketArn}/${CLIPS}/*`],
@@ -99,6 +99,11 @@ export class LambdasStack extends cdk.Stack {
                       "transcribe:GetTranscriptionJob",
                       "transcribe:DeleteTranscriptionJob",],
             resources: ["*"], // wildcard is fine since list-transcription-jobs is DENY
+        }))
+
+        this.phraser.addToRolePolicy(new iam.PolicyStatement({
+            actions: ["sqs:DeleteMessage"],
+            resources: [ clipsQueue.queueArn, ]
         }))
     }
 

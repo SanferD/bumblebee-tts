@@ -75,6 +75,16 @@ class S3:
     def save(self, object_key: S3ObjectKey, data: io.BytesIO) -> None:
         self._client.put_object(Body=data.read(), Bucket=self._bucket, Key=object_key.get_key())
 
+    def copy(self, src_object_key: S3ObjectKey, dst_object_key: S3ObjectKey) -> None:
+        self._client.copy(
+            Bucket=self._bucket,
+            CopySource={
+                "Bucket": self._bucket,
+                "Key": src_object_key.get_key(),
+            },
+            Key=dst_object_key.get_key(),
+        )
+
 
 if __name__ == "__main__":
     s3 = S3(Namespace.UNPROCESSED)

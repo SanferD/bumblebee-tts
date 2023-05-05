@@ -1,12 +1,14 @@
 """
 Iterates over all clips in event dict and transcribes them using aws transcribe
 """
+import config
+import json
 import logger
 import s3
+import sqs
 import structlog
 import time
 import transcribe_helper
-import json
 
 
 MAX_ATTEMPTS = 20
@@ -21,22 +23,24 @@ def handle(event: dict, context: dict) -> None:
     clips_s3 = s3.S3(s3.Namespace.CLIPS)
     phrases_s3 = s3.S3(s3.Namespace.PHRASES)
     transcribe = transcribe_helper.Transcribe()
+    clips_queue = sqs.SQS(config.CLIPS_QUEUE_URL)
 
     for record in event["Records"]:
         log.info("Processing record", record=record)
         body = json.loads(record["body"])
+        receipt_handle = record["receiptHandle"]
         clips_s3_path = body["clip_object_key"]
         clips_s3_object_key = s3.S3ObjectKey(s3.Namespace.CLIPS, clips_s3_path)
-        with structlog.contextvars.bound_contextvars(clips_s3_object_key=str(clips_s3_object_key)):
-            handle_one_clips_s3_path(clips_s3_object_key=clips_s3_object_key, clips_s3=clips_s3,
-                                    phrases_s3=phrases_s3, transcribe=transcribe)
+        with structlog.contextvars.bound_contextvars(clips_s3_object_key=str(clips_s3_object_key),
+                                                     receipt_handle=receipt_handle):
+            handle_one_clips_s3_path(clips_s3_object_key=clips_s3_object_key, receipt_handle=receipt_handle,
+                                     clips_s3=clips_s3, phrases_s3=phrases_s3, clips_queue=clips_queue,
+                                     transcribe=transcribe)
 
 
-def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcribe):
-    log.info("Attempting to get object")
-    clips_s3_object_bytesio = clips_s3.get_object(clips_s3_object_key)
-    log.info("Successful get object")
-
+def handle_one_clips_s3_path(clips_s3_object_key: s3.S3ObjectKey, receipt_handle: str,
+                             clips_s3: s3.S3, phrases_s3: s3.S3, clips_queue: sqs.SQS,
+                             transcribe: transcribe_helper.Transcribe):
     job_name = clips_s3_object_key.get_filestem().replace("=", "")
 
     with structlog.contextvars.bound_contextvars(job_name=job_name):
@@ -63,14 +67,16 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
             return
 
         transcription = transcribe_job.get_transcript()
-        transcription_object_key = s3.S3ObjectKey.create_object_key(s3.Namespace.PHRASES, transcription)
 
-    with structlog.contextvars.bound_contextvars(transcription_object_key=str(transcription_object_key)):
-        log.info("Saving transcription")
-        phrases_s3.save(transcription_object_key, clips_s3_object_bytesio)
-        log.info("Saved transcription")
+        if transcription:
+            transcription_object_key = s3.S3ObjectKey.create_object_key(s3.Namespace.PHRASES, transcription)
+            with structlog.contextvars.bound_contextvars(transcription_object_key=str(transcription_object_key)):
+                log.info("Creating transcription")
+                phrases_s3.copy(clips_s3_object_key, transcription_object_key)
+                log.info("Created transcription")
+        else:
+            log.info("No transcription found")
 
-    with structlog.contextvars.bound_contextvars(job_name=job_name):
         log.info("Deleting transcribe job")
         transcribe.delete_transcription_job(job_name=job_name)
         log.info("Deleted transcribe job")
@@ -78,6 +84,11 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
     log.info("Deleting clips object")
     clips_s3.remove(clips_s3_object_key)
     log.info("Deleted clips object")
+
+    log.info("Removing message from queue")
+    clips_queue.dequeue(receipt_handle)
+    log.info("Removed message from queue")
+
 
 
 if __name__ == "__main__":
