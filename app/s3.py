@@ -21,7 +21,7 @@ class S3ObjectKey:
         return S3ObjectKey(namespace, path)
 
     def __init__(self, namespace: Namespace, path: str):
-        self._bucket = config.DATA_BUCKET
+        self._bucket = config.BUCKET_NAME
         self._namespace = namespace
         self._path = pathlib.Path(path)
 
@@ -43,7 +43,7 @@ class S3ObjectKey:
 
 class S3:
     def __init__(self, namespace: Namespace):
-        self._bucket = config.DATA_BUCKET
+        self._bucket = config.BUCKET_NAME
         self._namespace = namespace
         self._client = boto3.client("s3")
         self._s3 = boto3.resource("s3")
@@ -53,10 +53,10 @@ class S3:
         has_object_keys = True
         while has_object_keys:
             if continuation_token is None:
-                response = self._client.list_objects_v2(Bucket=config.DATA_BUCKET,
+                response = self._client.list_objects_v2(Bucket=config.BUCKET_NAME,
                                                         Prefix=self._namespace.value,)
             else:
-                response = self._client.list_objects_v2(Bucket=config.DATA_BUCKET,
+                response = self._client.list_objects_v2(Bucket=config.BUCKET_NAME,
                                                         Prefix=self._namespace.value,
                                                         ContinuationToken=continuation_token,)
             for content in response["Contents"]:

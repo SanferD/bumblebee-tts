@@ -7,6 +7,6 @@ def get_env(env_name: str) -> str:
     return os.environ[env_name]
 
 
-DATA_BUCKET = get_env("DATA_BUCKET")
+BUCKET_NAME = get_env("BUCKET_NAME")
 CLIPS_QUEUE_URL = get_env("CLIPS_QUEUE_URL")
 IS_DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
