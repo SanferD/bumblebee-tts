@@ -1,7 +1,9 @@
-infra/node-modules
+infra/node_modules
 infra/cdk.out
 infra/.npmignore
 infra/**/*.d.ts
 infra/**/*.js
 **/*.pyc
+*.swp
+*.swo
 
