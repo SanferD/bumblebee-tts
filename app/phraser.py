@@ -46,6 +46,7 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
             log.error("Transcribe job did not complete")
             return
 
+        # don't cleanup jobs that didn't complete, can investigate further and manually delete when done
         if transcribe_job.is_failed():
             log.error(f"The transcription failed, {transcribe_job}")
             return
@@ -60,6 +61,11 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
         log.info("Saving transcription")
         phrases_s3.save(transcription_object_key, clips_s3_object_bytesio)
         log.info("Saved transcription")
+
+    with structlog.contextvars.bound_contextvars(job_name=job_name):
+        log.info("Deleting transcribe job")
+        transcribe.delete_transcription_job(job_name=job_name)
+        log.info("Deleted transcribe job")
 
 
 if __name__ == "__main__":
