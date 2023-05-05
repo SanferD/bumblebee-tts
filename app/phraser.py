@@ -6,6 +6,7 @@ import s3
 import structlog
 import time
 import transcribe_helper
+import json
 
 
 MAX_ATTEMPTS = 20
@@ -17,14 +18,18 @@ log = logger.get_log()
 
 def handle(event: dict, context: dict) -> None:
     log.info("Received event", _event=event)
-    clips_s3_path = "2.wav"
     clips_s3 = s3.S3(s3.Namespace.CLIPS)
     phrases_s3 = s3.S3(s3.Namespace.PHRASES)
     transcribe = transcribe_helper.Transcribe()
-    clips_s3_object_key = s3.S3ObjectKey(s3.Namespace.CLIPS, clips_s3_path)
-    with structlog.contextvars.bound_contextvars(clips_s3_object_key=str(clips_s3_object_key)):
-        handle_one_clips_s3_path(clips_s3_object_key=clips_s3_object_key, clips_s3=clips_s3,
-                                 phrases_s3=phrases_s3, transcribe=transcribe)
+    
+    for record in event["Records"]:
+        log.info("Processing record", record=record)
+        body = json.loads(record["body"])
+        clips_s3_path = body["clip_object_key"]
+        clips_s3_object_key = s3.S3ObjectKey(s3.Namespace.CLIPS, clips_s3_path)
+        with structlog.contextvars.bound_contextvars(clips_s3_object_key=str(clips_s3_object_key)):
+            handle_one_clips_s3_path(clips_s3_object_key=clips_s3_object_key, clips_s3=clips_s3,
+                                    phrases_s3=phrases_s3, transcribe=transcribe)
 
 
 def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcribe):
@@ -69,6 +74,10 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
         log.info("Deleting transcribe job")
         transcribe.delete_transcription_job(job_name=job_name)
         log.info("Deleted transcribe job")
+
+    log.info("Deleting clips object")
+    clips_s3.remove(clips_s3_object_key)
+    log.info("Deleted clips object")
 
 
 if __name__ == "__main__":
