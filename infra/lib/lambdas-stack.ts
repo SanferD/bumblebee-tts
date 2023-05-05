@@ -9,6 +9,9 @@ import * as sqs from 'aws-cdk-lib/aws-sqs'
 import { Construct } from 'constructs';
 
 const FFMPEG_LAYER_ARN = "arn:aws:lambda:us-east-1:180797159824:layer:ffmpeg:2"
+const RAW = "raw"
+const PHRASES = "phrases"
+const CLIPS = "clips"
 
 export interface LambdasStackProps extends cdk.StackProps {
     dataBucket: s3.Bucket
@@ -50,6 +53,10 @@ export class LambdasStack extends cdk.Stack {
             environment: {
                 BUCKET_NAME: props.dataBucket.bucketName,
                 CLIPS_QUEUE_URL: props.clipsQueue.queueUrl,
+                // hidden dependencies are difficult to debug, so pass these via environment variables
+                RAW_OBJECT_PREFIX: RAW,
+                CLIPS_OBJECT_PREFIX: CLIPS,
+                PHRASES_OBJECT_PREFIX: PHRASES,
             },
         });
     }
@@ -62,12 +69,12 @@ export class LambdasStack extends cdk.Stack {
 
         this.clipper.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:GetObject", "s3:DeleteObject",],
-            resources: [ `${dataBucket.bucketArn}/raw/*`, ]
+            resources: [ `${dataBucket.bucketArn}/${RAW}/*`, ]
         }))
 
         this.clipper.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:PutObject",],
-            resources: [ `${dataBucket.bucketArn}/clips/*`, ]
+            resources: [ `${dataBucket.bucketArn}/${CLIPS}/*`, ]
         }))
 
         this.clipper.addToRolePolicy(new iam.PolicyStatement({
@@ -79,12 +86,12 @@ export class LambdasStack extends cdk.Stack {
     private addPermissionsToPhraser(dataBucket: s3.Bucket): void {
         this.phraser.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:GetObject", ],
-            resources: [`${dataBucket.bucketArn}/clips/*`],
+            resources: [`${dataBucket.bucketArn}/${CLIPS}/*`],
         }))
 
         this.phraser.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:PutObject", ],
-            resources: [`${dataBucket.bucketArn}/phrasers/*`]
+            resources: [`${dataBucket.bucketArn}/${PHRASES}/*`]
         }))
 
         this.phraser.addToRolePolicy(new iam.PolicyStatement({

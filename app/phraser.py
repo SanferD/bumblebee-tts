@@ -21,7 +21,7 @@ def handle(event: dict, context: dict) -> None:
     clips_s3 = s3.S3(s3.Namespace.CLIPS)
     phrases_s3 = s3.S3(s3.Namespace.PHRASES)
     transcribe = transcribe_helper.Transcribe()
-    
+
     for record in event["Records"]:
         log.info("Processing record", record=record)
         body = json.loads(record["body"])

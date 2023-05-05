@@ -7,10 +7,9 @@ import pathlib
 
 
 class Namespace(enum.Enum):
-    RAW = "raw"
-    CLIPS = "clips"
-    UNPROCESSED = "unprocessed"
-    PHRASES = "phrases"
+    CLIPS = config.CLIPS_OBJECT_PREFIX
+    PHRASES = config.PHRASES_OBJECT_PREFIX
+    RAW = config.RAW_OBJECT_PREFIX
 
 
 class S3ObjectKey:
