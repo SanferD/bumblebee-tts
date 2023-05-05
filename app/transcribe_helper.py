@@ -63,3 +63,22 @@ class Transcribe:
         self._client.delete_transcription_job(
             TranscriptionJobName=job_name,
         )
+
+    def list_transcription_jobs(self) -> str:
+        response = self._client.list_transcription_jobs()
+        job_names = []
+        while True:
+            for job in response['TranscriptionJobSummaries']:
+                job_names.append(job['TranscriptionJobName'])
+            if 'NextToken' in response:
+                response = self._client.list_transcription_jobs(NextToken=response['NextToken'])
+            else:
+                break
+        return job_names
+
+
+if __name__ == "__main__":
+    # cleanup when the transcribe jobs are deleted
+    transcribe = Transcribe()
+    for job_name in transcribe.list_transcription_jobs():
+        transcribe.delete_transcription_job(job_name)
