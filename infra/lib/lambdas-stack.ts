@@ -8,7 +8,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as sqs from 'aws-cdk-lib/aws-sqs'
 import { Construct } from 'constructs';
 
-const FFMPEG_LAYER_ARN = "arn:aws:lambda:us-east-1:180797159824:layer:ffmpeg:2"
+const FFMPEG_LAYER_ARN = process.env.FFMPEG_LAYER_ARN
 const RAW = "raw"
 const PHRASES = "phrases"
 const CLIPS = "clips"
@@ -26,6 +26,10 @@ export class LambdasStack extends cdk.Stack {
 
     constructor(scope: Construct, id: string, props: LambdasStackProps) {
         super(scope, id, props);
+
+        if (FFMPEG_LAYER_ARN === undefined) {
+            throw new Error("FFMPEG_LAYER_ARN environment variable is not specified")
+        }
 
         const timeoutDuration = cdk.Duration.minutes(   props.visibilityTimeout.toMinutes()/6   )
         const codePath = path.join(__dirname, "..", "..", "app")
