@@ -2,10 +2,8 @@ import boto3
 import config
 import enum
 import io
-import os
 import typing
 import pathlib
-import json
 
 
 class Namespace(enum.Enum):
@@ -26,6 +24,9 @@ class S3ObjectKey:
         self._bucket = config.DATA_BUCKET
         self._namespace = namespace
         self._path = pathlib.Path(path)
+
+    def get_bucket(self) -> str:
+        return self._bucket
     
     def get_key(self) -> str:
         return self._path.as_posix()

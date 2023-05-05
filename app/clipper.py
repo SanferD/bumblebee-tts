@@ -66,12 +66,12 @@ def generate_audio_clips(filestem: str, extension: str, audio: pydub.AudioSegmen
                                                                                                      pydub.AudioSegment],
                                                                                         None,
                                                                                         None]:
-    INTERVALS = [3000, 5000, 7000,]
+    INTERVALS = [1200, 1500, 2000, 2500, 3000,]
     for interval in INTERVALS:
         for offset in range(0, len(audio), interval//2):
             clip = audio[offset:offset+interval]
             if len(clip) == interval:
-                clip_filename = f"{filestem}_offset={offset}ms_interval={interval//1000}s.{extension}"
+                clip_filename = f"{filestem}_offset={offset}ms_interval={interval}ms.{extension}"
                 clip_object_key = s3.S3ObjectKey.create_object_key(s3.Namespace.CLIPS, clip_filename)
                 yield (clip_object_key, clip)
 
