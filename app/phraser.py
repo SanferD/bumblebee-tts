@@ -37,7 +37,7 @@ def handle_one_clips_s3_path(clips_s3_object_key, clips_s3, phrases_s3, transcri
     clips_s3_object_bytesio = clips_s3.get_object(clips_s3_object_key)
     log.info("Successful get object")
 
-    job_name = clips_s3_object_key.get_filestem()
+    job_name = clips_s3_object_key.get_filestem().replace("=", "")
 
     with structlog.contextvars.bound_contextvars(job_name=job_name):
         log.info("Starting transcription job")
