@@ -8,9 +8,7 @@ log = logger.get_log()
 
 
 def bumblebee() -> pydub.AudioSegment:
-    log.info("Loading phrase2audio_segment")
     phrase2audio_segment = prepare_bumblebee.prepare_phrase2audio_segment(load_data=True, save_data=False)
-    log.info("Loaded phrase2audio_segment", phrases=len(phrase2audio_segment))
 
     while True:
         myphrase = input("Enter phrase: ")
