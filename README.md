@@ -43,4 +43,27 @@ You can view the logs to gain further insights during runtime. The phrases will 
 
 ### Generate Bumblebee Audio
 
-TODO: create the Bumblebee TTS by breaking down the given text into smaller phrases found in `<bucket-name>/phrases`.
+To get started, you'll need to prepare the `phrase2audio_segment.pickle` file. To do this, simply run the command `python prepare_bumblebee.py`. Once that's done, you can run `python bumblebee.py` to execute the program.
+
+```
+2023-05-06T15:26:34.699910Z [info     ] Loading phrase2audio_segment
+2023-05-06T15:26:34.733416Z [info     ] Loaded phrase2audio_segment    phrases=999
+Enter phrase: 
+```
+https://user-images.githubusercontent.com/9338001/236633206-ef9d7628-b18d-48a4-98e7-25baa99fd693.mp4
+
+### Environment Variables
+
+Here is a user-friendly version of the table:
+
+| Environment Key    | Description | Required |
+| :-----: | :-------: | :-------: |
+| BUCKET_NAME  | The name of the S3 data bucket created by CDK. | Yes |
+| CLIPS_QUEUE_URL | The URL of the SQS queue created by CDK. | Yes |
+| DEBUG    | Determines whether to enable DEBUG mode. The default value is to disable it. Use this setting for local development. | No |
+| CLIPS_OBJECT_PREFIX | The object prefix for clips. This setting is required if DEBUG is disabled. | Required if DEBUG is disabled |
+| PHRASES_OBJECT_PREFIX | The object prefix for phrases. This setting is required if DEBUG is disabled. | Required if DEBUG is disabled |
+| RAW_OBJECT_PREFIX | The object prefix for raw data. This setting is required if DEBUG is disabled. | Required if DEBUG is disabled |
+
+
+
