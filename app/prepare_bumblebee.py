@@ -1,4 +1,3 @@
-import bumblebee
 import config
 import pickle
 import pydub
@@ -15,7 +14,7 @@ def prepare_phrase2audio_segment(load_data=False, save_data=True) -> dict:
         phrase2audio_segment = dict()
         for phrase_s3_object_key in phrases_s3.list_object_keys():
             phrase_bytesio = phrases_s3.get_object(phrase_s3_object_key)
-            phrase = bumblebee.normalize_phrase(phrase_s3_object_key.get_filestem())
+            phrase = normalize_phrase(phrase_s3_object_key.get_filestem())
             phrase2audio_segment[phrase] = pydub.AudioSegment.from_file(phrase_bytesio, format="wav")
 
         if save_data:
