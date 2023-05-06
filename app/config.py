@@ -17,6 +17,7 @@ CLIPS_QUEUE_URL = get_env("CLIPS_QUEUE_URL")
 CLIPS_OBJECT_PREFIX = get_env("CLIPS_OBJECT_PREFIX", debug_default="clips")
 PHRASES_OBJECT_PREFIX = get_env("PHRASES_OBJECT_PREFIX", debug_default="phrases")
 RAW_OBJECT_PREFIX = get_env("RAW_OBJECT_PREFIX", debug_default="raw")
+PHRASE2AUDIO_FILENAME = "../phrase2audio_segment.pickle"
 
 botocore_config = Config(
     connect_timeout=5,
