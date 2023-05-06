@@ -1,4 +1,5 @@
 import boto3
+import config
 import logger
 import requests
 import s3
@@ -42,7 +43,7 @@ class TranscribeJob:
 
 class Transcribe:
     def __init__(self):
-        self._client = boto3.client("transcribe")
+        self._client = boto3.client("transcribe", config=config.botocore_config)
 
     def start_transcription_job(self, job_name: str, s3_object_key: s3.S3ObjectKey) -> None:
         self._client.start_transcription_job(

@@ -44,8 +44,8 @@ class S3:
     def __init__(self, namespace: Namespace):
         self._bucket = config.BUCKET_NAME
         self._namespace = namespace
-        self._client = boto3.client("s3")
-        self._s3 = boto3.resource("s3")
+        self._client = boto3.client("s3", config=config.botocore_config)
+        self._s3 = boto3.resource("s3", config=config.botocore_config)
 
     def list_object_keys(self) -> typing.Generator[str, None, None]:
         continuation_token = None
@@ -89,6 +89,6 @@ class S3:
 if __name__ == "__main__":
     s3 = S3(Namespace.UNPROCESSED)
     for x in s3.list_object_keys():
-        theobject = S3Object(x)
+        theobject = s3.S3Object(x)
         break
 

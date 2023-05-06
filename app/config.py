@@ -1,4 +1,5 @@
 import os
+from botocore.client import Config
 
 
 IS_DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
@@ -16,3 +17,10 @@ CLIPS_QUEUE_URL = get_env("CLIPS_QUEUE_URL")
 CLIPS_OBJECT_PREFIX = get_env("CLIPS_OBJECT_PREFIX", debug_default="clips")
 PHRASES_OBJECT_PREFIX = get_env("PHRASES_OBJECT_PREFIX", debug_default="phrases")
 RAW_OBJECT_PREFIX = get_env("RAW_OBJECT_PREFIX", debug_default="raw")
+
+botocore_config = Config(
+    connect_timeout=5,
+    read_timeout=30,
+    max_pool_connections=10,
+    retries={'max_attempts': 10},
+)
