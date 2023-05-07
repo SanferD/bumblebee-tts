@@ -14,6 +14,7 @@ def get_env(env_name: str, debug_default=None) -> str:
 
 BUCKET_NAME = get_env("BUCKET_NAME")
 CLIPS_QUEUE_URL = get_env("CLIPS_QUEUE_URL")
+RAW_QUEUE_URL = get_env("RAW_QUEUE_URL")
 CLIPS_OBJECT_PREFIX = get_env("CLIPS_OBJECT_PREFIX", debug_default="clips")
 PHRASES_OBJECT_PREFIX = get_env("PHRASES_OBJECT_PREFIX", debug_default="phrases")
 RAW_OBJECT_PREFIX = get_env("RAW_OBJECT_PREFIX", debug_default="raw")
