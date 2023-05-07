@@ -12,6 +12,7 @@ function setupInfrastructure(app: cdk.App) {
     new lib.LambdasStack(app, 'LambdaStack', {
         dataBucket: dataStack.dataBucket,
         clipsQueue: sqsStack.clipsQueue,
+        rawQueue: sqsStack.rawQueue,
         visibilityTimeout: sqsStack.visibilityTimeout,
     })
 }

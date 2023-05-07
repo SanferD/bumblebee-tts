@@ -15,12 +15,14 @@ const CLIPS = "clips"
 
 export interface LambdasStackProps extends cdk.StackProps {
     dataBucket: s3.Bucket
+    rawQueue: sqs.Queue
     clipsQueue: sqs.Queue
     visibilityTimeout: cdk.Duration
 }
 
 export class LambdasStack extends cdk.Stack {
 
+    readonly rawAdder: lambda.Function
     readonly clipper: lambda.Function
     readonly phraser: lambda.Function
 
@@ -34,10 +36,15 @@ export class LambdasStack extends cdk.Stack {
         const timeoutDuration = cdk.Duration.minutes(   props.visibilityTimeout.toMinutes()/6   )
         const codePath = path.join(__dirname, "..", "..", "app")
 
+        this.rawAdder = this.createLambdaFunction({ codePath, timeoutDuration, index: "raw_adder.py", props })
+        this.addPermissionsToRawAdder(props.dataBucket, props.rawQueue)
+
         this.clipper = this.createLambdaFunction({ codePath, timeoutDuration, index: "clipper.py", props });
         const ffmpegLayer = lambda.LayerVersion.fromLayerVersionArn(this, "ffmpeg-layer", FFMPEG_LAYER_ARN);
         this.clipper.addLayers(ffmpegLayer);
-        this.addPermissionsToClipper(props.dataBucket, props.clipsQueue)
+        const rawQueueEventSource = new lambdaEventSources.SqsEventSource(props.rawQueue)
+        this.clipper.addEventSource(rawQueueEventSource)
+        this.addPermissionsToClipper(props.dataBucket, props.rawQueue, props.clipsQueue)
 
         this.phraser = this.createLambdaFunction({ codePath, timeoutDuration, index: "phraser.py", props });
         const clipsQueueEventSource = new lambdaEventSources.SqsEventSource(props.clipsQueue)
@@ -57,6 +64,7 @@ export class LambdasStack extends cdk.Stack {
             environment: {
                 BUCKET_NAME: props.dataBucket.bucketName,
                 CLIPS_QUEUE_URL: props.clipsQueue.queueUrl,
+                RAW_QUEUE_URL: props.rawQueue.queueUrl,
                 // hidden dependencies are difficult to debug, so pass these via environment variables
                 RAW_OBJECT_PREFIX: RAW,
                 CLIPS_OBJECT_PREFIX: CLIPS,
@@ -66,12 +74,19 @@ export class LambdasStack extends cdk.Stack {
         });
     }
 
-    private addPermissionsToClipper(dataBucket: s3.Bucket, clipsQueue: sqs.Queue): void {
-        this.clipper.addToRolePolicy(new iam.PolicyStatement({
+    private addPermissionsToRawAdder(dataBucket: s3.Bucket, rawQueue: sqs.Queue): void {
+        this.rawAdder.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:ListBucket",],
             resources: [ dataBucket.bucketArn, ]
         }))
 
+        this.rawAdder.addToRolePolicy(new iam.PolicyStatement({
+            actions: ["sqs:SendMessage",],
+            resources: [ rawQueue.queueArn, ]
+        }))
+    }
+
+    private addPermissionsToClipper(dataBucket: s3.Bucket, rawQueue: sqs.Queue, clipsQueue: sqs.Queue): void {
         this.clipper.addToRolePolicy(new iam.PolicyStatement({
             actions: ["s3:GetObject", "s3:DeleteObject",],
             resources: [ `${dataBucket.bucketArn}/${RAW}/*`, ]
@@ -85,6 +100,11 @@ export class LambdasStack extends cdk.Stack {
         this.clipper.addToRolePolicy(new iam.PolicyStatement({
             actions: ["sqs:SendMessage"],
             resources: [ clipsQueue.queueArn, ]
+        }))
+
+        this.clipper.addToRolePolicy(new iam.PolicyStatement({
+            actions: ["sqs:RemoveMessage"],
+            resources: [ rawQueue.queueArn, ]
         }))
     }
 
