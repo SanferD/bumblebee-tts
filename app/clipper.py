@@ -50,7 +50,7 @@ def handle_one_raw_object_key(raw_s3_object_key, receipt_handle, raw_s3,
     log.info("Successful get raw object")
 
     log.info("Converting raw audio to AudioSegment")
-    audio = pydub.AudioSegment.from_file(raw_object_bytesio, format=raw_s3_object_key.get_extension())
+    audio = audio_helpers.bytesio_to_audio_segment(raw_object_bytesio, extension=raw_s3_object_key.get_extension())
     log.info("Successful raw audio AudioSegment")
 
     for (clip_object_key, clip) in generate_audio_clips(raw_s3_object_key.get_filestem(),
