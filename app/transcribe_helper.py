@@ -36,7 +36,12 @@ class TranscribeJob:
         transcript_url = self._data["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
         log.info("fetching transcript from transcript url", transcript_url=transcript_url)
         response = requests.get(transcript_url)
-        self._transcript = response.json()["results"]["transcripts"][0]["transcript"]
+        try:
+            self._transcript = response.json()["results"]["transcripts"][0]["transcript"]
+        except requests.JSONDecodeError as e:
+            log.exception("Could not decode", text=response.content)
+            raise e
+
         log.info("successful fetch transcript")
         return self._transcript
 
