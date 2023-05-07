@@ -62,6 +62,7 @@ export class LambdasStack extends cdk.Stack {
                 CLIPS_OBJECT_PREFIX: CLIPS,
                 PHRASES_OBJECT_PREFIX: PHRASES,
             },
+            reservedConcurrentExecutions: 15,
         });
     }
 
