@@ -9,6 +9,7 @@ import sqs
 import structlog
 import time
 import transcribe_helper
+import botocore.exceptions
 
 
 MAX_ATTEMPTS = 20
@@ -45,8 +46,12 @@ def handle_one_clips_s3_path(clips_s3_object_key: s3.S3ObjectKey, receipt_handle
 
     with structlog.contextvars.bound_contextvars(job_name=job_name):
         log.info("Starting transcription job")
-        transcribe.start_transcription_job(job_name=job_name, s3_object_key=clips_s3_object_key)
-        log.info("Successful transcription job")
+        try:
+            transcribe.start_transcription_job(job_name=job_name, s3_object_key=clips_s3_object_key)
+            log.info("Successful transcription job")
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "ConflictException":
+                log.info("Transcribe job already exists, reusing")
 
         for attempt in range(1, MAX_ATTEMPTS+1):
             log.info(f"Waiting for job to finish, {attempt}/{MAX_ATTEMPTS} attempts with {SLEEP_SECONDS}s sleep")
