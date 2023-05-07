@@ -24,6 +24,9 @@ class S3ObjectKey:
         self._namespace = namespace
         self._path = pathlib.Path(path)
 
+    def is_file(self) -> bool:
+        return self._path.is_file()
+
     def get_bucket(self) -> str:
         return self._bucket
     
@@ -51,15 +54,18 @@ class S3:
         continuation_token = None
         has_object_keys = True
         while has_object_keys:
+            object_key_prefix = f"{self._namespace.value}/"
             if continuation_token is None:
                 response = self._client.list_objects_v2(Bucket=config.BUCKET_NAME,
-                                                        Prefix=self._namespace.value,)
+                                                        Prefix=object_key_prefix,)
             else:
                 response = self._client.list_objects_v2(Bucket=config.BUCKET_NAME,
-                                                        Prefix=self._namespace.value,
+                                                        Prefix=object_key_prefix,
                                                         ContinuationToken=continuation_token,)
             for content in response["Contents"]:
-                yield S3ObjectKey(namespace=self._namespace, path=content["Key"],)
+                s3_object_key = S3ObjectKey(namespace=self._namespace, path=content["Key"],)
+                if s3_object_key.is_file():
+                    yield s3_object_key
             continuation_token = response.get("NextContinuationKey")
             has_object_keys = continuation_token is not None
 
