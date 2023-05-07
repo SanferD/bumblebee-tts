@@ -25,7 +25,7 @@ class S3ObjectKey:
         self._path = pathlib.Path(path)
 
     def is_file(self) -> bool:
-        return self._path.is_file()
+        return self.get_filestem() != self._namespace.value
 
     def get_bucket(self) -> str:
         return self._bucket
@@ -50,7 +50,7 @@ class S3:
         self._client = boto3.client("s3", config=config.botocore_config)
         self._s3 = boto3.resource("s3", config=config.botocore_config)
 
-    def list_object_keys(self) -> typing.Generator[str, None, None]:
+    def list_file_object_keys(self) -> typing.Generator[S3ObjectKey, None, None]:
         continuation_token = None
         has_object_keys = True
         while has_object_keys:
@@ -69,16 +69,16 @@ class S3:
             continuation_token = response.get("NextContinuationKey")
             has_object_keys = continuation_token is not None
 
-    def get_object(self, object_key: S3ObjectKey) -> io.BytesIO:
+    def get_object_contents(self, object_key: S3ObjectKey) -> io.BytesIO:
         bytes_io = io.BytesIO()
         theobject = self._s3.Object(self._bucket, object_key.get_key())
         theobject.download_fileobj(bytes_io)
         return bytes_io
 
-    def remove(self, object_key: S3ObjectKey) -> None:
+    def delete_object(self, object_key: S3ObjectKey) -> None:
         self._client.delete_object(Bucket=self._bucket, Key=object_key.get_key(),)
 
-    def save(self, object_key: S3ObjectKey, data: io.BytesIO) -> None:
+    def put_object(self, object_key: S3ObjectKey, data: io.BytesIO) -> None:
         self._client.put_object(Body=data.read(), Bucket=self._bucket, Key=object_key.get_key())
 
     def copy(self, src_object_key: S3ObjectKey, dst_object_key: S3ObjectKey) -> None:
@@ -94,7 +94,7 @@ class S3:
 
 if __name__ == "__main__":
     s3 = S3(Namespace.UNPROCESSED)
-    for x in s3.list_object_keys():
+    for x in s3.list_file_object_keys():
         theobject = s3.S3Object(x)
         break
 

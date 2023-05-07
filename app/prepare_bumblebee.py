@@ -21,8 +21,8 @@ def prepare_phrase2audio_segment(load_data=False, save_data=True) -> dict:
         log.info("Populating phrase2audio_segment")
         phrases_s3 = s3.S3(s3.Namespace.PHRASES)
         phrase2audio_segment = dict()
-        for (i , phrase_s3_object_key) in enumerate(phrases_s3.list_object_keys()):
-            phrase_bytesio = phrases_s3.get_object(phrase_s3_object_key)
+        for (i , phrase_s3_object_key) in enumerate(phrases_s3.list_file_object_keys()):
+            phrase_bytesio = phrases_s3.get_object_contents(phrase_s3_object_key)
             phrase = normalize_phrase(phrase_s3_object_key.get_filestem())
             phrase2audio_segment[phrase] = pydub.AudioSegment.from_file(phrase_bytesio, format="wav")
             if i > 0 and i%25 == 0:

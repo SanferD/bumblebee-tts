@@ -46,7 +46,7 @@ def handle(event, context) -> None:
 def handle_one_raw_object_key(raw_s3_object_key, receipt_handle, raw_s3,
                               clips_s3, raw_queue, clips_queue):
     log.info("Getting raw object")
-    raw_object_bytesio = raw_s3.get_object(raw_s3_object_key)
+    raw_object_bytesio = raw_s3.get_object_contents(raw_s3_object_key)
     log.info("Successful get raw object")
 
     log.info("Converting raw audio to AudioSegment")
@@ -60,21 +60,21 @@ def handle_one_raw_object_key(raw_s3_object_key, receipt_handle, raw_s3,
             clip_bytesio = audio_helpers.audio_segment_to_bytesio(clip, format=raw_s3_object_key.get_extension())
 
             log.info("Saving clip")
-            clips_s3.save(clip_object_key, clip_bytesio)
+            clips_s3.put_object(clip_object_key, clip_bytesio)
             log.info("Successful save clip")
 
             clips_sqs_message = {"clip_object_key": clip_object_key.get_key()}
             with structlog.contextvars.bound_contextvars(clips_sqs_message=clips_sqs_message):
                 log.info("Enqueing clip")
-                clips_queue.enqueue(clips_sqs_message)
+                clips_queue.send_message(clips_sqs_message)
                 log.info("Successful enqueue clip")
 
     log.info("Removing raw object")
-    raw_s3.remove(raw_s3_object_key)
+    raw_s3.delete_object(raw_s3_object_key)
     log.info("Successful remove raw object")
 
     log.info("Removing message from raw queue")
-    raw_queue.dequeue(receipt_handle)
+    raw_queue.delete_message(receipt_handle)
     log.info("Removed message from raw queue")
 
 

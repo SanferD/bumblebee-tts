@@ -8,9 +8,9 @@ class SQS:
         self._url = url
         self._client = boto3.client("sqs", config=config.botocore_config)
     
-    def enqueue(self, message: dict) -> None:
+    def send_message(self, message: dict) -> None:
         self._client.send_message(QueueUrl=self._url, MessageBody=json.dumps(message),)
 
-    def dequeue(self, receipt_handle) -> None:
+    def delete_message(self, receipt_handle) -> None:
         self._client.delete_message(QueueUrl=self._url, ReceiptHandle=receipt_handle)
 

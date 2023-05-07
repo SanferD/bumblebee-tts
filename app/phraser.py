@@ -87,11 +87,11 @@ def handle_one_clips_s3_path(clips_s3_object_key: s3.S3ObjectKey, receipt_handle
         log.info("Deleted transcribe job")
 
     log.info("Deleting clips object")
-    clips_s3.remove(clips_s3_object_key)
+    clips_s3.delete_object(clips_s3_object_key)
     log.info("Deleted clips object")
 
     log.info("Removing message from queue")
-    clips_queue.dequeue(receipt_handle)
+    clips_queue.delete_message(receipt_handle)
     log.info("Removed message from queue")
 
 
